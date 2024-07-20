@@ -27,19 +27,19 @@ class ReceiptController extends Controller
         // to do validation
 
         DB::beginTransaction();
-        try 
-        {
-            // if ($request->has('img'))
-            // {
-            //     $path = $request->file('img')->store(time() . '.' . $request->file('img')->getClientOriginalExtension(), 'public');
-            // }
+        try {
+            foreach ($request->data as $data) {
+                if (isset($data['img']) && $data['img'] instanceof \Illuminate\Http\UploadedFile) {
+                    $filename = $data['img']->storeAs(time() . '.' . $data['img']->getClientOriginalExtension(), '', 'public');
+                }
 
-            $receipt = Receipt::create([
-                'category' => $request->category,
-                'date' => $request->date,
-                'total' => $request->total,
-                'img' => $path ?? null
-            ]);
+                $receipt = Receipt::create([
+                    'category' => $data['category'],
+                    'date' => $data['date'],
+                    'total' => $data['total'],
+                    'img' => isset($filename) ? asset('storage/' . $filename) : null
+                ]);
+            }
 
             DB::commit();
 
@@ -48,9 +48,7 @@ class ReceiptController extends Controller
                 'data' => new ReceiptResource($receipt),
                 'message' => 'Receipt created successfully',
             ], 201);
-        } 
-        catch (Exception $error) 
-        {
+        } catch (Exception $error) {
             DB::rollBack();
             Log::error($error);
 
@@ -67,8 +65,7 @@ class ReceiptController extends Controller
      */
     public function show(string $id)
     {
-        try 
-        {
+        try {
             $receipt = Receipt::findOrFail($id);
 
             return response()->json([
@@ -76,9 +73,7 @@ class ReceiptController extends Controller
                 'data' => new ReceiptResource($receipt),
                 'message' => 'Receipt showed successfully',
             ], 200);
-        }
-        catch (Exception $error) 
-        {
+        } catch (Exception $error) {
             Log::error($error);
 
             return response()->json([
@@ -97,8 +92,7 @@ class ReceiptController extends Controller
         // to do validation
 
         DB::beginTransaction();
-        try 
-        {
+        try {
             $receipt = Receipt::findOrFail($id);
 
             // if ($request->has('img'))
@@ -119,9 +113,7 @@ class ReceiptController extends Controller
                 'data' => new ReceiptResource($receipt),
                 'message' => 'Receipt updated successfully',
             ], 201);
-        } 
-        catch (Exception $error) 
-        {
+        } catch (Exception $error) {
             DB::rollBack();
         }
     }
